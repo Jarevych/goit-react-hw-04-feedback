@@ -1,85 +1,63 @@
-import React from 'react';
-import ContactList from './ContactList';
-import FormInput from './Form';
-import './styles.css';
+import FeedbackOptions from "./FeedbackOptions";
+import Notification from "./Notification";
+import Statistic from "./Statistic";
+import React, { useState } from "react";
+
+function App() {
+  // const [feedback, setFeedBack] = useState({ good: 0, neutral: 0, bad: 0 });
+  const [good, setGood] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [bad, setBad] = useState(0);
 
 
-export class App extends React.Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
-
-  addContact = newContact => {
-    const { name, number } = newContact;
-    const contactExists = this.state.contacts.some(
-      contact =>
-        contact.name.toLowerCase().includes(name.toLowerCase()) ||
-        contact.number === number
-    );
-    if (contactExists) {
-      alert(`"${name}"is already in contacts`);
-      return;
+  const handleFeedback = (type) => {
+    
+    switch (type) {
+      case "good":
+          setGood((state => state + 1))        
+        break;
+        case "neutral":
+          setNeutral((state => state + 1))        
+        break; 
+        case "bad":
+        setBad((state => state + 1))        
+      break;
+      default:
+        break;
     }
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-      name: '',
-      number: '',
-    }));
+    // setFeedBack((prevState) => ({
+    //   ...prevState,
+    //   [type]: prevState[type] + 1,
+    // }));
   };
+  const total = good + neutral + bad;
 
-  handleFilter = e => {
-    const filterValue = e.target.value;
-    this.setState({ filter: filterValue });
+  const countPositiveFeedback = () => {
+    return total === 0 ? 0 : Math.round((good / total) * 100);
   };
+  const positiveFeedback = countPositiveFeedback();
 
-  deleteItem = itemId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== itemId),
-    }));
-  };
-
-  componentDidMount() {
-    const stringifiedContacts = localStorage.getItem('contacts');
-    const parcedContacts = JSON.parse(stringifiedContacts) ?? [];
-    this.setState({
-      contacts: parcedContacts,
-    });
-  }
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts.length !== prevState.contacts.length) {
-      const stringifiedContacts = JSON.stringify(this.state.contacts);
-      localStorage.setItem('contacts', stringifiedContacts);
-    }
-  }
-
-  render() {
-    const filteredContacts = this.state.contacts.filter(contact =>
-      contact.name.toLowerCase().includes(this.state.filter.toLowerCase())
-    );
-    return (
-      <div className="app-container">
-        <h2 className="app-title">Phonebook</h2>
-        <FormInput
-          inputData={this.handleInput}
-          addContact={this.addContact}
-          contacts={this.state.contacts}
+  return (
+    <div className="container">
+      <h1>Please leave feedback</h1>
+      <FeedbackOptions
+        options={["good", "neutral", "bad"]}
+        onLeaveFeedback={handleFeedback}
+      />
+      <h2>Statistic</h2>
+      {total > 0 ? (
+        <Statistic
+          good={good}
+          neutral={neutral}
+          bad={bad}
+          total={total}
+          positiveFeedback={positiveFeedback}
         />
-        <h2 className="contacts-title">Contacts</h2>
-        <label>
-          Filter
-          <input
-            type="search"
-            name="filter"
-            value={this.state.filter}
-            onChange={this.handleFilter}
-          />
-        </label>
-        <ContactList
-          contacts={filteredContacts}
-          onDeleteItem={this.deleteItem}
-        />
-      </div>
-    );
-  }
+      ) : (
+        <Notification message="There is no feedback" />
+      )}
+    </div>
+  );
 }
+
+export default App;
